@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="EfCoreLab.Test/EfCoreLab.Test.csproj" />
+  <Project Path="EfCoreLab/EfCoreLab.csproj" />
+</Solution>
