@@ -24,7 +24,18 @@ namespace EfCoreLab.Mappings
             return new Customer
             {
                 Name = dto.Name,
-                Email = dto.Email
+                Email = dto.Email,
+                Invoices = dto.Invoices?.Select(i => new Invoice
+                {
+                    InvoiceNumber = i.InvoiceNumber,
+                    InvoiceDate = i.InvoiceDate,
+                    Amount = i.Amount
+                }).ToList() ?? new List<Invoice>(),
+                PhoneNumbers = dto.PhoneNumbers?.Select(p => new TelephoneNumber
+                {
+                    Type = p.Type,
+                    Number = p.Number
+                }).ToList() ?? new List<TelephoneNumber>()
             };
         }
 

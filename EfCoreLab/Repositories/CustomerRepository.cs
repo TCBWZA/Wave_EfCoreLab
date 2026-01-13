@@ -189,10 +189,54 @@ namespace EfCoreLab.Repositories
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Creates a new customer and saves any related telephone numbers or invoices.
+        /// 
+        /// EF Core behavior with related entities:
+        /// - When you Add() a parent entity (Customer), EF Core automatically tracks
+        ///   any related entities in navigation properties (PhoneNumbers, Invoices)
+        /// - All tracked entities are saved in a single transaction when SaveChangesAsync() is called
+        /// - Foreign keys are automatically set (CustomerId in TelephoneNumber and Invoice)
+        /// 
+        /// What gets saved:
+        /// 1. The Customer entity to the Customers table
+        /// 2. Any Invoice entities in customer.Invoices to the Invoices table
+        /// 3. Any TelephoneNumber entities in customer.PhoneNumbers to the TelephoneNumbers table
+        /// 
+        /// Example usage:
+        /// var customer = new Customer 
+        /// { 
+        ///     Name = "Acme Corp",
+        ///     Email = "contact@acme.com",
+        ///     PhoneNumbers = new List<TelephoneNumber> 
+        ///     {
+        ///         new TelephoneNumber { Type = "Mobile", Number = "555-1234" },
+        ///         new TelephoneNumber { Type = "Work", Number = "555-5678" }
+        ///     },
+        ///     Invoices = new List<Invoice>
+        ///     {
+        ///         new Invoice { InvoiceNumber = "INV-001", Amount = 100.00m, InvoiceDate = DateTime.UtcNow }
+        ///     }
+        /// };
+        /// var saved = await CreateAsync(customer);
+        /// // All entities are saved atomically in a single database transaction
+        /// // saved.Id will contain the generated customer ID
+        /// // saved.PhoneNumbers[0].CustomerId will be automatically set
+        /// // saved.Invoices[0].CustomerId will be automatically set
+        /// </summary>
         public async Task<Customer> CreateAsync(Customer customer)
         {
+            // Add customer to context - EF Core automatically tracks related entities
+            // in customer.Invoices and customer.PhoneNumbers collections
             _context.Customers.Add(customer);
+            
+            // SaveChangesAsync executes in a transaction and saves:
+            // 1. Customer to Customers table
+            // 2. Related Invoice entities to Invoices table (if any)
+            // 3. Related TelephoneNumber entities to TelephoneNumbers table (if any)
+            // Foreign keys (CustomerId) are automatically populated by EF Core
             await _context.SaveChangesAsync();
+            
             return customer;
         }
 

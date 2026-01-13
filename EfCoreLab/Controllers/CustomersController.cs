@@ -246,6 +246,46 @@ namespace EfCoreLab.Controllers
             return Ok(customer.ToDto());
         }
 
+        /// <summary>
+        /// EXAMPLE: Creating a customer with related entities
+        /// 
+        /// POST /api/customers
+        /// 
+        /// Creates a new customer and optionally includes related invoices and phone numbers
+        /// in a single atomic transaction. All entities are saved together.
+        /// 
+        /// Request body example:
+        /// {
+        ///   "name": "Acme Corp",
+        ///   "email": "contact@acme.com",
+        ///   "invoices": [
+        ///     {
+        ///       "invoiceNumber": "INV-001",
+        ///       "invoiceDate": "2024-01-15T00:00:00Z",
+        ///       "amount": 1500.00
+        ///     }
+        ///   ],
+        ///   "phoneNumbers": [
+        ///     {
+        ///       "type": "Mobile",
+        ///       "number": "555-1234"
+        ///     },
+        ///     {
+        ///       "type": "Work",
+        ///       "number": "555-5678"
+        ///     }
+        ///   ]
+        /// }
+        /// 
+        /// EF Core behavior:
+        /// - Creates Customer record
+        /// - Creates related Invoice records with CustomerId automatically set
+        /// - Creates related TelephoneNumber records with CustomerId automatically set
+        /// - All operations happen in a single database transaction
+        /// - If any operation fails, entire transaction is rolled back
+        /// 
+        /// Note: Invoices and PhoneNumbers are optional - you can create a customer without them.
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<CustomerDto>> Create([FromBody] CreateCustomerDto dto)
         {
