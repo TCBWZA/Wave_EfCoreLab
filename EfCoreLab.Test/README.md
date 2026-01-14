@@ -4,7 +4,7 @@ Comprehensive unit and integration test suite for the EfCoreLab project.
 
 ## Quick Start
 
-```bash
+```powershell
 # Run all tests
 dotnet test
 
@@ -164,7 +164,7 @@ Passed!  - Failed:     0
 
 To generate code coverage:
 
-```bash
+```powershell
 dotnet test --collect:"XPlat Code Coverage"
 ```
 

@@ -151,7 +151,7 @@ var customers = context.Customers
     .Include(c => c.Invoices)           // 5 invoices per customer
     .Include(c => c.PhoneNumbers)       // 3 phones per customer
     .ToListAsync();
-// Returns 15 rows per customer (5  3)! Customer data duplicated 15 times!
+// Returns 15 rows per customer (5 x 3)! Customer data duplicated 15 times!
 ```
 
 **The Solution:**
@@ -172,9 +172,12 @@ var customers = context.Customers
 
 **Try it:**
 ```powershell
-# Compare file sizes
-Invoke-RestMethod -Uri "http://localhost:5000/api/customers?includeRelated=true" | ConvertTo-Json | Measure-Object -Character
-Invoke-RestMethod -Uri "http://localhost:5000/api/customers/with-split-queries" | ConvertTo-Json | Measure-Object -Character
+# Compare response sizes
+$single = Invoke-RestMethod -Uri "http://localhost:5000/api/customers?includeRelated=true"
+$split = Invoke-RestMethod -Uri "http://localhost:5000/api/customers/with-split-queries"
+
+Write-Host "Single query size: $(($single | ConvertTo-Json).Length) bytes"
+Write-Host "Split query size: $(($split | ConvertTo-Json).Length) bytes"
 ```
 
 ---

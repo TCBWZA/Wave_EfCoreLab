@@ -13,6 +13,13 @@ internal class Program
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+        // Add Bonus DbContext for bonus challenges
+        builder.Services.AddDbContext<BonusDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        // Add memory cache for bonus challenges
+        builder.Services.AddMemoryCache();
+
         // Register repositories
         builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
         builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
@@ -35,10 +42,11 @@ internal class Program
 
             try
             {
+                // Seed main database
                 var context = services.GetRequiredService<AppDbContext>();
                 var seedSettings = builder.Configuration.GetSection("SeedSettings").Get<SeedSettings>() ?? new SeedSettings();
 
-                logger.LogInformation("Checking database...");
+                logger.LogInformation("Checking main database...");
 
                 // Ensure database is created
                 await context.Database.EnsureCreatedAsync();
@@ -59,6 +67,26 @@ internal class Program
                 else
                 {
                     logger.LogInformation("Database seeding is disabled in configuration.");
+                }
+
+                // Seed bonus database
+                logger.LogInformation("Checking bonus database...");
+                var bonusContext = services.GetRequiredService<BonusDbContext>();
+                
+                // Ensure bonus database is created
+                await bonusContext.Database.EnsureCreatedAsync();
+
+                if (seedSettings.EnableSeeding)
+                {
+                    logger.LogInformation("Seeding bonus database...");
+                    await BonusBogusDataGenerator.SeedBonusDatabase(
+                        bonusContext,
+                        customerCount: seedSettings.CustomerCount,
+                        minInvoicesPerCustomer: seedSettings.MinInvoicesPerCustomer,
+                        maxInvoicesPerCustomer: seedSettings.MaxInvoicesPerCustomer,
+                        minPhoneNumbersPerCustomer: seedSettings.MinPhoneNumbersPerCustomer,
+                        maxPhoneNumbersPerCustomer: seedSettings.MaxPhoneNumbersPerCustomer
+                    );
                 }
             }
             catch (Exception ex)
