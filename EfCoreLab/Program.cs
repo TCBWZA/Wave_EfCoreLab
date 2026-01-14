@@ -69,12 +69,15 @@ internal class Program
                     logger.LogInformation("Database seeding is disabled in configuration.");
                 }
 
-                // Seed bonus database
+                // Handle bonus database - use Migrate instead of EnsureCreated
+                // This allows adding new tables to existing database
                 logger.LogInformation("Checking bonus database...");
                 var bonusContext = services.GetRequiredService<BonusDbContext>();
                 
-                // Ensure bonus database is created
-                await bonusContext.Database.EnsureCreatedAsync();
+                // Apply any pending migrations for BonusDbContext
+                // This will create the bonus tables if they don't exist
+                logger.LogInformation("Applying bonus database migrations...");
+                await bonusContext.Database.MigrateAsync();
 
                 if (seedSettings.EnableSeeding)
                 {
