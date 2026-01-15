@@ -23,12 +23,13 @@ namespace EfCoreLab.Repositories
                     .Include(c => c.PhoneNumbers);
             }
 
-            return await query.FirstOrDefaultAsync(c => c.Id == id);
+            return await query.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<Customer?> GetByEmailAsync(string email)
         {
             return await _context.Customers
+                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Email == email);
         }
 
@@ -43,7 +44,7 @@ namespace EfCoreLab.Repositories
                     .Include(c => c.PhoneNumbers);
             }
 
-            return await query.ToListAsync();
+            return await query.AsNoTracking().ToListAsync();
         }
 
         /// <summary>
@@ -63,7 +64,7 @@ namespace EfCoreLab.Repositories
                 .Include(c => c.Invoices)
                 .Include(c => c.PhoneNumbers);
 
-            return await query.ToListAsync();
+            return await query.AsNoTracking().ToListAsync();
         }
 
         /// <summary>
@@ -81,11 +82,10 @@ namespace EfCoreLab.Repositories
         /// - Take(10) => Return next 10 items (page 2)
         /// </summary>
         public async Task<(List<Customer> Items, int TotalCount)> GetPagedAsync(
-            int page, 
-            int pageSize, 
+            int page,
+            int pageSize,
             bool includeRelated = false)
         {
-            // Build base query
             var query = _context.Customers.AsQueryable();
 
             if (includeRelated)
@@ -95,20 +95,18 @@ namespace EfCoreLab.Repositories
                     .Include(c => c.PhoneNumbers);
             }
 
-            // Get total count BEFORE applying Skip/Take
-            // This is needed for calculating total pages
-            var totalCount = await query.CountAsync();
+            var totalCount = await query.AsNoTracking().CountAsync();
+            if (totalCount > 0)
+            {
+                var items = await query
+                    .AsNoTracking()
+                    .OrderBy(c => c.Name)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
 
-            // Apply pagination
-            // OrderBy is REQUIRED for consistent pagination results
-            var items = await query
-                .OrderBy(c => c.Name)  // Always order before pagination
-                .Skip((page - 1) * pageSize)  // Skip previous pages
-                .Take(pageSize)  // Take only current page
-                .ToListAsync();
-
-            return (items, totalCount);
-        }
+                return (items, totalCount);
+            }
 
         /// <summary>
         /// Demonstrates dynamic filtering with multiple optional parameters.
@@ -129,8 +127,8 @@ namespace EfCoreLab.Repositories
         /// - minBalance: Uses subquery to calculate sum of invoice amounts
         /// </summary>
         public async Task<List<Customer>> SearchAsync(
-            string? name, 
-            string? email, 
+            string? name,
+            string? email,
             decimal? minBalance)
         {
             // Start with base query - no SQL executed yet
@@ -157,7 +155,7 @@ namespace EfCoreLab.Repositories
             }
 
             // NOW execute the query with all WHERE clauses combined
-            return await query.ToListAsync();
+            return await query.AsNoTracking().ToListAsync();
         }
 
         /// <summary>
@@ -229,14 +227,14 @@ namespace EfCoreLab.Repositories
             // Add customer to context - EF Core automatically tracks related entities
             // in customer.Invoices and customer.PhoneNumbers collections
             _context.Customers.Add(customer);
-            
+
             // SaveChangesAsync executes in a transaction and saves:
             // 1. Customer to Customers table
             // 2. Related Invoice entities to Invoices table (if any)
             // 3. Related TelephoneNumber entities to TelephoneNumbers table (if any)
             // Foreign keys (CustomerId) are automatically populated by EF Core
             await _context.SaveChangesAsync();
-            
+
             return customer;
         }
 
@@ -266,13 +264,13 @@ namespace EfCoreLab.Repositories
         public async Task<bool> EmailExistsAsync(string email, long? excludeCustomerId = null)
         {
             var query = _context.Customers.Where(c => c.Email == email);
-            
+
             if (excludeCustomerId.HasValue)
             {
                 query = query.Where(c => c.Id != excludeCustomerId.Value);
             }
 
-            return await query.AnyAsync();
+            return await query.AsNoTracking().AnyAsync();
         }
     }
 }
