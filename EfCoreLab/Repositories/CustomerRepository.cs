@@ -107,7 +107,8 @@ namespace EfCoreLab.Repositories
 
                 return (items, totalCount);
             }
-
+            return (new List<Customer>(), 0);
+        }
         /// <summary>
         /// Demonstrates dynamic filtering with multiple optional parameters.
         /// Each filter is only applied if the parameter has a value.
