@@ -242,27 +242,27 @@ namespace EfCoreLab.Repositories
 
         public async Task<Customer> UpdateAsync(Customer customer)
         {
-            try
-            {
+            //try
+            //{
                 _context.Customers.Update(customer);
                 await _context.SaveChangesAsync();
                 return customer;
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await ExistsAsync(customer.Id))
-                {
-                    throw new KeyNotFoundException($"Customer with ID {customer.Id} not found.");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("An error occurred while updating the customer.", ex.InnerException);
-            }
+            //}
+            //catch (DbUpdateConcurrencyException)
+            //{
+            //    if (!await ExistsAsync(customer.Id))
+            //    {
+            //        throw new KeyNotFoundException($"Customer with ID {customer.Id} not found.");
+            //    }
+            //    else
+            //    {
+            //        throw;
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw new Exception("An error occurred while updating the customer.", ex.InnerException);
+            //}
 
         }
 
