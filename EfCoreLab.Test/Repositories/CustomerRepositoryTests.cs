@@ -95,7 +95,7 @@ namespace EfCoreLab.Tests.Repositories
         public async Task GetByEmailAsync_WithValidEmail_ReturnsCustomer()
         {
             // Arrange
-            string email = "contact@acme.com";
+            string email = "contact@acme.example.com";
 
             // Act
             var result = await _repository.GetByEmailAsync(email);
@@ -200,7 +200,7 @@ namespace EfCoreLab.Tests.Repositories
             // Arrange
             var customer = await _repository.GetByIdAsync(1);
             customer.Name = "Updated Name";
-            customer.Email = "updated@example.com";
+            customer.Email = "updated@updatedname.example.com";
 
             // Act
             var result = await _repository.UpdateAsync(customer);
@@ -208,7 +208,7 @@ namespace EfCoreLab.Tests.Repositories
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Name, Is.EqualTo("Updated Name"));
-            Assert.That(result.Email, Is.EqualTo("updated@example.com"));
+            Assert.That(result.Email, Is.EqualTo("updated@updatedname.example.com"));
         }
 
         [Test]
@@ -308,7 +308,7 @@ namespace EfCoreLab.Tests.Repositories
         public async Task EmailExistsAsync_WithExistingEmail_ReturnsTrue()
         {
             // Arrange
-            string existingEmail = "contact@acme.com";
+            string existingEmail = "contact@acme.example.com";
 
             // Act
             var result = await _repository.EmailExistsAsync(existingEmail);
@@ -334,7 +334,7 @@ namespace EfCoreLab.Tests.Repositories
         public async Task EmailExistsAsync_WithExcludedCustomerId_ReturnsFalse()
         {
             // Arrange
-            string email = "contact@acme.com";
+            string email = "contact@acme.example.com";
             long excludeId = 1;
 
             // Act
@@ -348,7 +348,7 @@ namespace EfCoreLab.Tests.Repositories
         public async Task EmailExistsAsync_WithDifferentCustomerId_ReturnsTrue()
         {
             // Arrange
-            string email = "contact@acme.com";
+            string email = "contact@acme.example.com";
             long excludeId = 2;
 
             // Act

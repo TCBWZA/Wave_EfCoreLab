@@ -44,19 +44,19 @@ namespace EfCoreLab.Tests.TestHelpers
                 {
                     Id = 1,
                     Name = "Acme Corporation",
-                    Email = "contact@example.com"
+                    Email = "contact@acme.example.com"
                 },
                 new Customer
                 {
                     Id = 2,
                     Name = "Tech Solutions Ltd",
-                    Email = "info@example.com"
+                    Email = "info@techsolutions.example.com"
                 },
                 new Customer
                 {
                     Id = 3,
                     Name = "Global Industries",
-                    Email = "hello@example.com"
+                    Email = "hello@globalindustriesexample.com"
                 }
             };
 

@@ -37,7 +37,7 @@ namespace EfCoreLab.Tests.Models
             {
                 Id = 1,
                 Name = "Test Customer",
-                Email = "test@example.com"
+                Email = "test@test.example.com"
             };
 
             // Act
@@ -55,7 +55,7 @@ namespace EfCoreLab.Tests.Models
             {
                 Id = 1,
                 Name = "Test Customer",
-                Email = "test@example.com",
+                Email = "test@test.example.com",
                 Invoices = new List<BonusInvoice>
                 {
                     new BonusInvoice { Id = 1, Amount = 100.00m, CustomerId = 1, InvoiceNumber = "INV-001", InvoiceDate = DateTime.UtcNow },
@@ -80,7 +80,7 @@ namespace EfCoreLab.Tests.Models
             var customer = new BonusCustomer
             {
                 Name = "Acme Corporation",
-                Email = "contact@acmecorporation.com",
+                Email = "contact@acmecorporation.example.com",
                 CreatedDate = DateTime.UtcNow.AddDays(-1),
                 ModifiedDate = DateTime.UtcNow,
                 IsDeleted = false
@@ -200,7 +200,7 @@ namespace EfCoreLab.Tests.Models
                 Name = "Test Customer",
                 Email = "test@testcustomer.com",
                 CreatedDate = DateTime.UtcNow.AddDays(1), // Future date
-                ModifiedDate = DateTime.UtcNow, // .AddDays(2),
+                ModifiedDate = DateTime.UtcNow.AddDays(2),
                 IsDeleted = false
             };
 
