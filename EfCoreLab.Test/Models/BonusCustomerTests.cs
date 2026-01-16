@@ -5,6 +5,13 @@ namespace EfCoreLab.Tests.Models
 {
     /// <summary>
     /// Tests for BonusCustomer entity including custom validation (IValidatableObject).
+    /// 
+    /// KNOWN ISSUES IN THESE TESTS:
+    /// 1. Validate_CreatedDateInFuture_FailsValidation: Creates cascade validation error because
+    ///    ModifiedDate ends up before CreatedDate, triggering multiple validation errors
+    /// 2. Tests rely on DateTime.UtcNow which can cause timing issues in CI/CD pipelines
+    /// 3. Email domain validation logic requires the email domain to contain a word from the company name
+    ///    (minimum 4 characters), or be from test.com/example.com domains
     /// </summary>
     [TestFixture]
     public class BonusCustomerTests
@@ -181,13 +188,19 @@ namespace EfCoreLab.Tests.Models
         [Test]
         public void Validate_CreatedDateInFuture_FailsValidation()
         {
+            // ISSUE: This test has a timing issue - if test runs slowly, DateTime.UtcNow values may differ
+            // CreatedDate is set to UtcNow.AddDays(1) but ModifiedDate is set to UtcNow
+            // This means ModifiedDate will be BEFORE CreatedDate, causing an additional validation error
+            // SUGGESTION: Set ModifiedDate = CreatedDate or use AddDays(2) for ModifiedDate to avoid cascade failures
+            // SUGGESTION: The test will still pass but may get 2 validation errors instead of 1
+            
             // Arrange
             var customer = new BonusCustomer
             {
                 Name = "Test Customer",
                 Email = "test@testcustomer.com",
                 CreatedDate = DateTime.UtcNow.AddDays(1), // Future date
-                ModifiedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.UtcNow, // .AddDays(2),
                 IsDeleted = false
             };
 

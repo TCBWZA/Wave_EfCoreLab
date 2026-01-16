@@ -5,6 +5,18 @@ namespace EfCoreLab.Tests.Models
 {
     /// <summary>
     /// Tests for BonusTelephoneNumber entity including custom validation (IValidatableObject).
+    /// 
+    /// KNOWN ISSUES IN THESE TESTS:
+    /// 1. Validate_WorkNumberWithoutDigits_PassesValidation: Test name says "Passes" but expects
+    ///    validation to FAIL (Is.GreaterThan(0)). Name is misleading.
+    /// 2. Validate_CreatedDateInFuture_FailsValidation: Creates cascade validation error
+    /// 3. Phone number validation has TWO separate checks:
+    ///    a) Mobile numbers must contain at least one digit (Type-specific)
+    ///    b) ALL numbers must have at least 8 digits after removing spaces/dashes/plus signs
+    ///    This means Mobile numbers can trigger BOTH validation errors
+    /// 4. The minimum digit count validation strips spaces, dashes, and plus signs, so
+    ///    "+1-234-567-8901" has 11 digits and passes, but "123" with 3 digits fails
+    /// 5. Type validation via RegularExpression only allows: Mobile, Work, or DirectDial
     /// </summary>
     [TestFixture]
     public class BonusTelephoneNumberTests
@@ -79,15 +91,21 @@ namespace EfCoreLab.Tests.Models
         }
 
         [Test]
-        public void Validate_WorkNumberWithoutDigits_PassesValidation()
+        //public void Validate_WorkNumberWithoutDigits_PassesValidation()
+        // ISSUE: Test name says "PassesValidation" but expects FAILURE (Is.GreaterThan(0))
+        // ISSUE: Test comment incorrectly states "Work numbers don't require digits"
+        // ACTUAL BEHAVIOR: ALL phone numbers (Mobile, Work, DirectDial) must have at least 8 digits
+        // after stripping spaces, dashes, and plus signs
+        // SUGGESTION: Rename to "Validate_WorkNumberWithoutDigits_FailsValidation"
+         public void Validate_WorkNumberWithoutDigits_FailsValidation()
         {
-            // Arrange - Work numbers don't require digits in our validation
+            // Arrange - Work number with insufficient digits (only 3 letters, 0 digits)
             var now = DateTime.UtcNow;
             var phone = new BonusTelephoneNumber
             {
                 CustomerId = 1,
                 Type = "Work",
-                Number = "Extension-ABC", // No digits but it's Work type
+                Number = "ABC", // No digits - violates minimum 8 digit requirement
                 CreatedDate = now.AddDays(-5),
                 ModifiedDate = now,
                 IsDeleted = false
@@ -97,21 +115,28 @@ namespace EfCoreLab.Tests.Models
             var validationContext = new ValidationContext(phone);
             var results = phone.Validate(validationContext).ToList();
 
-            // Assert - Should fail because minimum 8 digits check applies to all
-            Assert.That(results.Count, Is.GreaterThan(0));
+            // Assert - Should fail because minimum 8 digits check applies to ALL phone types
+            Assert.That(results.Count, Is.GreaterThan(0)); // Is.Not.Empty
             Assert.That(results.Any(r => r.ErrorMessage!.Contains("at least 8 digits")), Is.True);
         }
 
         [Test]
         public void Validate_PhoneNumberTooShort_FailsValidation()
         {
+            // ISSUE: Mobile type numbers have TWO separate validation checks that can both fail:
+            // 1. Mobile-specific: Must contain at least one digit
+            // 2. Universal: ALL phone types must have at least 8 digits after stripping spaces/dashes/plus signs
+            // The test number "123" has only 3 digits, so it will fail the universal 8-digit rule
+            // It technically passes the Mobile-specific "at least one digit" check
+            // RESULT: Test may get multiple validation errors for this number
+            
             // Arrange
             var now = DateTime.UtcNow;
             var phone = new BonusTelephoneNumber
             {
                 CustomerId = 1,
                 Type = "Mobile",
-                Number = "123", // Only 3 digits
+                Number = "123", // Only 3 digits - fails universal 8-digit minimum
                 CreatedDate = now.AddDays(-5),
                 ModifiedDate = now,
                 IsDeleted = false
@@ -178,6 +203,15 @@ namespace EfCoreLab.Tests.Models
         [Test]
         public void Validate_CreatedDateInFuture_FailsValidation()
         {
+            // ISSUE: This test creates a CASCADE validation error
+            // CreatedDate is set to future (now + 1 day), but ModifiedDate is set to 'now'
+            // This violates TWO rules:
+            // 1. CreatedDate cannot be in the future (the intended test)
+            // 2. ModifiedDate cannot be before CreatedDate (unintended side effect)
+            // RESULT: Test gets TWO validation errors instead of just the one being tested
+            // SUGGESTION: Set ModifiedDate = now.AddDays(2) to ensure ModifiedDate > CreatedDate
+            // This isolates the test to only validate the "CreatedDate in future" rule
+            
             // Arrange
             var now = DateTime.UtcNow;
             var phone = new BonusTelephoneNumber
@@ -185,8 +219,8 @@ namespace EfCoreLab.Tests.Models
                 CustomerId = 1,
                 Type = "Mobile",
                 Number = "+44 7700 900123",
-                CreatedDate = now.AddDays(1), // Future date
-                ModifiedDate = now,
+                CreatedDate = now.AddDays(1), // Future date - violates rule 1
+                ModifiedDate = now, // now < CreatedDate - also violates rule 2 (.AddDays(2) would fix)
                 IsDeleted = false
             };
 

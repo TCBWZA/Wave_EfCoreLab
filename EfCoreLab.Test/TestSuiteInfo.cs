@@ -52,7 +52,7 @@ namespace EfCoreLab.Tests
         {
             // Verify that we can create an in-memory context
             using var context = TestHelpers.TestDbContextFactory.CreateInMemoryContext();
-            
+
             Assert.That(context, Is.Not.Null);
             Assert.That(context.Database.ProviderName, Does.Contain("InMemory"));
         }

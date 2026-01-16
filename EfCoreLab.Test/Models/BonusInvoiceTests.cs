@@ -5,6 +5,15 @@ namespace EfCoreLab.Tests.Models
 {
     /// <summary>
     /// Tests for BonusInvoice entity including custom validation (IValidatableObject).
+    /// 
+    /// KNOWN ISSUES IN THESE TESTS:
+    /// 1. Validate_CreatedDateInFuture_FailsValidation: Creates cascade validation error because
+    ///    ModifiedDate ends up before CreatedDate, resulting in 2 validation errors instead of 1
+    /// 2. Tests use DateTime.UtcNow which may cause intermittent failures if test execution is slow
+    /// 3. Amount validation enforces > 0 in IValidatableObject.Validate(), but Range attribute
+    ///    already enforces 0.01 minimum, creating redundant validation
+    /// 4. InvoiceDate cannot be more than 10 years in the past - this rule may cause tests to
+    ///    fail in the future if test data isn't refreshed
     /// </summary>
     [TestFixture]
     public class BonusInvoiceTests
@@ -189,6 +198,12 @@ namespace EfCoreLab.Tests.Models
         [Test]
         public void Validate_CreatedDateInFuture_FailsValidation()
         {
+            // ISSUE: Similar timing issue - CreatedDate is in future (now + 1 day) but ModifiedDate is set to 'now'
+            // This creates TWO validation errors:
+            // 1. CreatedDate cannot be in the future
+            // 2. ModifiedDate cannot be before CreatedDate
+            // SUGGESTION: Set ModifiedDate = now.AddDays(2) to test only the CreatedDate validation
+            
             // Arrange
             var now = DateTime.UtcNow;
             var invoice = new BonusInvoice
@@ -198,7 +213,7 @@ namespace EfCoreLab.Tests.Models
                 InvoiceDate = now.AddDays(-5),
                 Amount = 100.00m,
                 CreatedDate = now.AddDays(1), // Future date
-                ModifiedDate = now,
+                ModifiedDate = now, //.AddDays(2),
                 IsDeleted = false
             };
 
